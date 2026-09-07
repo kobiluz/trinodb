@@ -5,12 +5,12 @@
     <parent>
         <groupId>io.airlift</groupId>
         <artifactId>airbase</artifactId>
-        <version>391</version>
+        <version>395</version>
     </parent>
 
     <groupId>io.trino</groupId>
     <artifactId>trino-root</artifactId>
-    <version>482</version>
+    <version>483</version>
     <packaging>pom</packaging>
 
     <name>${project.artifactId}</name>
@@ -44,10 +44,11 @@
         <module>lib/trino-cache</module>
         <module>lib/trino-filesystem</module>
         <module>lib/trino-filesystem-azure</module>
-        <module>lib/trino-filesystem-cache-alluxio</module>
         <module>lib/trino-filesystem-gcs</module>
         <module>lib/trino-filesystem-manager</module>
         <module>lib/trino-filesystem-s3</module>
+        <module>lib/trino-geospatial-epsg</module>
+        <module>lib/trino-geospatial-epsg-generator</module>
         <module>lib/trino-geospatial-toolkit</module>
         <module>lib/trino-hdfs</module>
         <module>lib/trino-hive-formats</module>
@@ -62,6 +63,8 @@
         <module>plugin/trino-base-jdbc</module>
         <module>plugin/trino-bigquery</module>
         <module>plugin/trino-blackhole</module>
+        <module>plugin/trino-blob-cache-alluxio</module>
+        <module>plugin/trino-blob-cache-memory</module>
         <module>plugin/trino-cassandra</module>
         <module>plugin/trino-clickhouse</module>
         <module>plugin/trino-datasketches</module>
@@ -142,14 +145,14 @@
     <scm child.scm.connection.inherit.append.path="false" child.scm.developerConnection.inherit.append.path="false" child.scm.url.inherit.append.path="false">
         <connection>scm:git:git://github.com/trinodb/trino.git</connection>
         <developerConnection>scm:git:git@github.com:trinodb/trino.git</developerConnection>
-        <tag>482</tag>
+        <tag>483</tag>
         <url>https://github.com/trinodb/trino</url>
     </scm>
 
     <properties>
         <project.build.targetJdk>25</project.build.targetJdk>
         <!-- for reproducible build support, updated by release plugin -->
-        <project.build.outputTimestamp>2026-06-25T18:13:42Z</project.build.outputTimestamp>
+        <project.build.outputTimestamp>2026-07-18T00:36:39Z</project.build.outputTimestamp>
         <!-- TODO remove this property when no module overrides it -->
         <trino.error-prone.guarded-by>ERROR</trino.error-prone.guarded-by>
 
@@ -184,30 +187,32 @@
         <air.test.jvm.additional-arguments>${air.test.jvm.additional-arguments.default}</air.test.jvm.additional-arguments>
 
         <!-- keep dependency properties sorted -->
-        <dep.airlift.version>435</dep.airlift.version>
+        <dep.airlift.version>439</dep.airlift.version>
         <dep.alluxio.version>2.9.6</dep.alluxio.version>
         <dep.antlr.version>4.13.2</dep.antlr.version>
         <dep.avro.version>1.12.1</dep.avro.version>
         <dep.cassandra.version>4.17.0</dep.cassandra.version>
         <dep.confluent.version>8.1.1</dep.confluent.version>
+        <dep.derby.version>10.17.1.0</dep.derby.version>
         <dep.docker.images.version>127</dep.docker.images.version>
         <dep.drift.version>1.24</dep.drift.version>
         <dep.frontend-maven-plugin.version>2.0.1</dep.frontend-maven-plugin.version>
-        <dep.frontend-node.version>v24.12.0</dep.frontend-node.version>
-        <dep.frontend-npm.version>11.7.0</dep.frontend-npm.version>
-        <dep.httpcore5.version>5.4.2</dep.httpcore5.version>
+        <dep.frontend-bun.version>v1.3.14</dep.frontend-bun.version>
+        <dep.geoapi.version>3.0.2</dep.geoapi.version>
+        <dep.httpcore5.version>5.4.3</dep.httpcore5.version>
         <dep.iceberg.version>1.11.0</dep.iceberg.version>
         <dep.jna.version>5.19.1</dep.jna.version>
         <dep.jsonwebtoken.version>0.13.0</dep.jsonwebtoken.version>
         <dep.jts.version>1.20.0</dep.jts.version>
-        <dep.netty.version>4.2.15.Final</dep.netty.version>
+        <dep.netty.version>4.2.16.Final</dep.netty.version>
         <dep.okhttp.version>5.4.0</dep.okhttp.version>
         <dep.okio.version>3.17.0</dep.okio.version>
         <dep.parquet.version>1.17.1</dep.parquet.version>
         <dep.protobuf.version>4.35.1</dep.protobuf.version>
+        <dep.sis.version>1.6</dep.sis.version>
         <dep.swagger.version>2.2.52</dep.swagger.version>
         <dep.takari.version>2.3.4</dep.takari.version>
-        <dep.tcnative.version>2.0.79.Final</dep.tcnative.version>
+        <dep.tcnative.version>2.0.80.Final</dep.tcnative.version>
         <dep.tempto.version>204</dep.tempto.version>
         <dep.testng.version>7.8.0</dep.testng.version>
         <dep.zookeeper.version>3.9.5</dep.zookeeper.version>
@@ -241,7 +246,7 @@
             <dependency>
                 <groupId>com.google.cloud</groupId>
                 <artifactId>libraries-bom</artifactId>
-                <version>26.84.0</version>
+                <version>26.85.0</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -297,7 +302,7 @@
             <dependency>
                 <groupId>org.jdbi</groupId>
                 <artifactId>jdbi3-bom</artifactId>
-                <version>3.53.0</version>
+                <version>3.54.0</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -313,7 +318,7 @@
             <dependency>
                 <groupId>software.amazon.awssdk</groupId>
                 <artifactId>bom</artifactId>
-                <version>2.46.17</version>
+                <version>2.47.4</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -323,7 +328,7 @@
                 <!-- https://github.com/ClickHouse/clickhouse-docs/pull/2408/files -->
                 <groupId>at.yawk.lz4</groupId>
                 <artifactId>lz4-java</artifactId>
-                <version>1.11.0</version>
+                <version>1.11.1</version>
             </dependency>
 
             <dependency>
@@ -372,7 +377,7 @@
             <dependency>
                 <groupId>com.exasol</groupId>
                 <artifactId>exasol-jdbc</artifactId>
-                <version>26.2.7</version>
+                <version>26.2.8</version>
             </dependency>
 
             <dependency>
@@ -561,7 +566,7 @@
             <dependency>
                 <groupId>io.airlift</groupId>
                 <artifactId>aircompressor-v3</artifactId>
-                <version>3.6</version>
+                <version>3.7</version>
             </dependency>
 
             <dependency>
@@ -923,6 +928,18 @@
 
             <dependency>
                 <groupId>io.trino</groupId>
+                <artifactId>trino-blob-cache-alluxio</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>io.trino</groupId>
+                <artifactId>trino-blob-cache-memory</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>io.trino</groupId>
                 <artifactId>trino-cache</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -1011,12 +1028,6 @@
 
             <dependency>
                 <groupId>io.trino</groupId>
-                <artifactId>trino-filesystem-cache-alluxio</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>io.trino</groupId>
                 <artifactId>trino-filesystem-gcs</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -1036,6 +1047,18 @@
             <dependency>
                 <groupId>io.trino</groupId>
                 <artifactId>trino-geospatial</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>io.trino</groupId>
+                <artifactId>trino-geospatial-epsg</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>io.trino</groupId>
+                <artifactId>trino-geospatial-epsg-generator</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
@@ -1823,6 +1846,12 @@
             </dependency>
 
             <dependency>
+                <groupId>org.apache.derby</groupId>
+                <artifactId>derby</artifactId>
+                <version>${dep.derby.version}</version>
+            </dependency>
+
+            <dependency>
                 <groupId>org.apache.httpcomponents</groupId>
                 <artifactId>httpclient</artifactId>
                 <version>4.5.14</version>
@@ -1843,7 +1872,7 @@
             <dependency>
                 <groupId>org.apache.httpcomponents.client5</groupId>
                 <artifactId>httpclient5</artifactId>
-                <version>5.6.1</version>
+                <version>5.6.2</version>
             </dependency>
 
             <dependency>
@@ -2057,6 +2086,24 @@
             </dependency>
 
             <dependency>
+                <groupId>org.apache.sis.core</groupId>
+                <artifactId>sis-metadata</artifactId>
+                <version>${dep.sis.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.sis.core</groupId>
+                <artifactId>sis-referencing</artifactId>
+                <version>${dep.sis.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.sis.non-free</groupId>
+                <artifactId>sis-embedded-data</artifactId>
+                <version>${dep.sis.version}</version>
+            </dependency>
+
+            <dependency>
                 <groupId>org.apache.thrift</groupId>
                 <artifactId>libthrift</artifactId>
                 <version>0.23.0</version>
@@ -2135,7 +2182,7 @@
             <dependency>
                 <groupId>org.checkerframework</groupId>
                 <artifactId>checker-qual</artifactId>
-                <version>4.2.0</version>
+                <version>4.2.1</version>
             </dependency>
 
             <dependency>
@@ -2206,6 +2253,12 @@
             </dependency>
 
             <dependency>
+                <groupId>org.opengis</groupId>
+                <artifactId>geoapi</artifactId>
+                <version>${dep.geoapi.version}</version>
+            </dependency>
+
+            <dependency>
                 <groupId>org.pcollections</groupId>
                 <artifactId>pcollections</artifactId>
                 <version>5.0.0</version>
@@ -2214,7 +2267,7 @@
             <dependency>
                 <groupId>org.postgresql</groupId>
                 <artifactId>postgresql</artifactId>
-                <version>42.7.11</version>
+                <version>42.7.13</version>
             </dependency>
 
             <dependency>
@@ -2232,7 +2285,7 @@
             <dependency>
                 <groupId>org.roaringbitmap</groupId>
                 <artifactId>RoaringBitmap</artifactId>
-                <version>1.6.14</version>
+                <version>1.6.15</version>
             </dependency>
 
             <dependency>
@@ -2324,8 +2377,7 @@
                     <artifactId>frontend-maven-plugin</artifactId>
                     <version>${dep.frontend-maven-plugin.version}</version>
                     <configuration>
-                        <nodeVersion>${dep.frontend-node.version}</nodeVersion>
-                        <npmVersion>${dep.frontend-npm.version}</npmVersion>
+                        <bunVersion>${dep.frontend-bun.version}</bunVersion>
                     </configuration>
                 </plugin>
                 <plugin>
@@ -2540,7 +2592,7 @@
                 <plugin>
                     <groupId>ca.vanzyl.provisio.maven.plugins</groupId>
                     <artifactId>provisio-maven-plugin</artifactId>
-                    <version>1.1.1</version>
+                    <version>1.1.3</version>
                 </plugin>
 
                 <plugin>
@@ -2823,14 +2875,13 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-compiler-plugin</artifactId>
-                        <!--suppress MavenModelInspection -->
-                        <configuration combine.children="merge">
+                        <configuration>
                             <!-- forking not required due to JVM flags in .mvn/jvm.config -->
                             <!-- see https://errorprone.info/docs/installation#maven -->
                             <!-- Do not fail on error-prone's warnings even for modules using air.compiler.fail-warnings -->
                             <!-- TODO silence warnings we choose to ignore and raise important warnings to error and then remove <failOnWarning> -->
                             <failOnWarning>false</failOnWarning>
-                            <compilerArgs>
+                            <compilerArgs combine.children="append">
                                 <arg>-XDcompilePolicy=simple</arg>
                                 <arg>--should-stop=ifError=FLOW</arg>
                                 <arg>-Xplugin:ErrorProne @${air.main.basedir}/.mvn/errorprone.config \

@@ -271,6 +271,18 @@ implementation is used:
   - Enable bucket-aware execution. This allows the engine to use physical
     bucketing information to optimize queries by reducing data exchanges.
   - `true`
+* - `iceberg.encryption.kms-type`
+  - Key Management Service type for
+    [Iceberg table encryption](https://iceberg.apache.org/docs/latest/encryption/).
+    Possible values are `AWS`, `AZURE`, and `GCP`. Required to read encrypted tables.
+    Writing to encrypted tables is not supported.
+  -
+* - `iceberg.encryption.plaintext-files-allowed-for-encrypted-tables`
+  - Allow reading unencrypted files in tables with encryption enabled. When set
+    to `false`, an error is raised if a file with encryption key metadata is not
+    actually encrypted. The equivalent catalog session property is
+    `plaintext_files_allowed_for_encrypted_tables`.
+  - `false`
 :::
 
 (iceberg-fte-support)=
@@ -1214,6 +1226,16 @@ the table name:
 SELECT * FROM "test_table$properties";
 ```
 
+The same metadata tables are also available for a materialized view (see
+{ref}`iceberg-materialized-views`) by appending the metadata table name to the
+materialized view name. The query resolves against the materialized view's
+storage table:
+
+```sql
+SELECT * FROM "test_materialized_view$files";
+```
+
+
 ##### `$properties` table
 
 The `$properties` table provides access to general information about Iceberg
@@ -2019,8 +2041,8 @@ SELECT *
 FROM example.testdb.customer_orders FOR TIMESTAMP AS OF TIMESTAMP '2022-03-23 09:59:29.803 Europe/Vienna';
 ```
 
-You can use a date to specify a point a time in the past for using a snapshot of a table in a query.
-Assuming that the session time zone is `Europe/Vienna` the following queries are equivalent:
+You can use a date to specify a point in time in the past for querying a table snapshot.
+Assuming that the session time zone is `Europe/Vienna`, the following queries are equivalent:
 
 ```sql
 SELECT *
@@ -2094,19 +2116,35 @@ underlying system, each materialized view consists of a view definition and an
 Iceberg storage table. The storage table name is stored as a materialized view
 property. The data is stored in that storage table.
 
-You can use the {ref}`iceberg-table-properties` to control the created storage
-table and therefore the layout and performance. For example, you can use the
-following clause with {doc}`/sql/create-materialized-view` to use the ORC format
-for the data files and partition the storage per day using the column
-`event_date`:
+(iceberg-materialized-view-properties)=
+#### Materialized view properties
+
+Materialized view properties can be used with
+{doc}`/sql/create-materialized-view` to control behavior specific to the
+materialized view. Materialized view properties are passed to the connector
+using a {doc}`WITH </sql/create-materialized-view>` clause.
+
+:::{list-table} Iceberg materialized view properties
+:widths: 40, 60
+:header-rows: 1
+
+* - Property name
+  - Description
+* - `storage_schema`
+  - Schema for creating the materialized view storage table. Defaults to the
+    schema of the materialized view definition.
+:::
+
+In addition to the above, all {ref}`iceberg-table-properties` are supported and
+control the layout and performance of the underlying storage table.
+
+For example, you can use the following clause with
+{doc}`/sql/create-materialized-view` to use the ORC format for the data files
+and partition the storage per day using the column `event_date`:
 
 ```sql
 WITH ( format = 'ORC', partitioning = ARRAY['event_date'] )
 ```
-
-By default, the storage table is created in the same schema as the materialized
-view definition. The `storage_schema` materialized view property can be
-used to specify the schema where the storage table is created.
 
 Creating a materialized view does not automatically populate it with data. You
 must run {doc}`/sql/refresh-materialized-view` to populate data in the

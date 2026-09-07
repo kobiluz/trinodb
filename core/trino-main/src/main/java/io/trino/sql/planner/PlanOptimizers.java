@@ -373,7 +373,7 @@ public class PlanOptimizers
         Set<Rule<?>> simplifyOptimizerRules = ImmutableSet.<Rule<?>>builder()
                 .addAll(new SimplifyExpressions(plannerContext).rules())
                 .addAll(new UnwrapRowSubscript(plannerContext).rules())
-                .addAll(new PushCastIntoRow().rules())
+                .addAll(new PushCastIntoRow(plannerContext).rules())
                 .addAll(new UnwrapCastInComparison(plannerContext).rules())
                 .addAll(new UnwrapDateTruncInComparison(plannerContext).rules())
                 .addAll(new UnwrapYearInComparison(plannerContext).rules())
@@ -421,7 +421,7 @@ public class PlanOptimizers
                                 .addAll(projectionPushdownRules)
                                 .addAll(simplifyOptimizerRules)
                                 .addAll(new UnwrapRowSubscript(plannerContext).rules())
-                                .addAll(new PushCastIntoRow().rules())
+                                .addAll(new PushCastIntoRow(plannerContext).rules())
                                 .add(new OptimizeRowPattern())
                                 .addAll(ImmutableSet.of(
                                         new ImplementTableFunctionSource(metadata),
@@ -1014,8 +1014,8 @@ public class PlanOptimizers
                 costCalculator,
                 ImmutableSet.<Rule<?>>builder()
                         .addAll(new PushPartialAggregationThroughJoin().rules())
-                        .add(new PushPartialAggregationThroughExchange(plannerContext),
-                                new PruneJoinColumns(),
+                        .addAll(new PushPartialAggregationThroughExchange(plannerContext).rules())
+                        .add(new PruneJoinColumns(),
                                 new PruneJoinChildrenColumns(),
                                 new RemoveRedundantIdentityProjections())
                         .build()));

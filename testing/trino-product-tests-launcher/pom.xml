@@ -5,7 +5,7 @@
     <parent>
         <groupId>io.trino</groupId>
         <artifactId>trino-root</artifactId>
-        <version>482</version>
+        <version>483</version>
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
@@ -218,6 +218,14 @@
                                     <type>jar</type>
                                     <outputDirectory>${project.build.directory}</outputDirectory>
                                     <destFileName>databricks-jdbc.jar</destFileName>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>org.apache.iceberg</groupId>
+                                    <artifactId>iceberg-spark-runtime-4.0_2.13</artifactId>
+                                    <version>${dep.iceberg.version}</version>
+                                    <type>jar</type>
+                                    <outputDirectory>${project.build.directory}</outputDirectory>
+                                    <destFileName>iceberg-spark-runtime.jar</destFileName>
                                 </artifactItem>
                             </artifactItems>
                         </configuration>

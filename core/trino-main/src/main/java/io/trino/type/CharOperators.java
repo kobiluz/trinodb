@@ -14,6 +14,7 @@
 package io.trino.type;
 
 import io.airlift.slice.Slice;
+import io.trino.plugin.base.util.NumberParser;
 import io.trino.spi.TrinoException;
 import io.trino.spi.function.LiteralParameter;
 import io.trino.spi.function.LiteralParameters;
@@ -51,7 +52,7 @@ public final class CharOperators
     public static double castToDouble(@SqlType("char(x)") Slice slice)
     {
         try {
-            return Double.parseDouble(slice.toStringUtf8().trim());
+            return NumberParser.parseDouble(slice, 0, slice.length());
         }
         catch (Exception e) {
             throw new TrinoException(INVALID_CAST_ARGUMENT, format("Cannot cast '%s' to DOUBLE", slice.toStringUtf8()));
@@ -65,7 +66,7 @@ public final class CharOperators
     public static long castToReal(@SqlType("char(x)") Slice slice)
     {
         try {
-            return toReal(Float.parseFloat(slice.toStringUtf8().trim()));
+            return toReal(NumberParser.parseFloat(slice, 0, slice.length()));
         }
         catch (Exception e) {
             throw new TrinoException(INVALID_CAST_ARGUMENT, format("Cannot cast '%s' to REAL", slice.toStringUtf8()));
@@ -79,7 +80,7 @@ public final class CharOperators
     public static long castToBigint(@SqlType("char(x)") Slice slice)
     {
         try {
-            return Long.parseLong(slice.toStringUtf8().trim());
+            return NumberParser.parseTrimmedLong(slice, 0, slice.length());
         }
         catch (Exception e) {
             throw new TrinoException(INVALID_CAST_ARGUMENT, format("Cannot cast '%s' to BIGINT", slice.toStringUtf8()));
@@ -93,7 +94,7 @@ public final class CharOperators
     public static long castToInteger(@SqlType("char(x)") Slice slice)
     {
         try {
-            return Integer.parseInt(slice.toStringUtf8().trim());
+            return toIntExact(NumberParser.parseTrimmedLong(slice, 0, slice.length()));
         }
         catch (Exception e) {
             throw new TrinoException(INVALID_CAST_ARGUMENT, format("Cannot cast '%s' to INT", slice.toStringUtf8()));
@@ -107,7 +108,7 @@ public final class CharOperators
     public static long castToSmallint(@SqlType("char(x)") Slice slice)
     {
         try {
-            return Short.parseShort(slice.toStringUtf8().trim());
+            return toShortExact(NumberParser.parseTrimmedLong(slice, 0, slice.length()));
         }
         catch (Exception e) {
             throw new TrinoException(INVALID_CAST_ARGUMENT, format("Cannot cast '%s' to SMALLINT", slice.toStringUtf8()));
@@ -121,7 +122,7 @@ public final class CharOperators
     public static long castToTinyint(@SqlType("char(x)") Slice slice)
     {
         try {
-            return Byte.parseByte(slice.toStringUtf8().trim());
+            return toByteExact(NumberParser.parseTrimmedLong(slice, 0, slice.length()));
         }
         catch (Exception e) {
             throw new TrinoException(INVALID_CAST_ARGUMENT, format("Cannot cast '%s' to TINYINT", slice.toStringUtf8()));
@@ -154,5 +155,21 @@ public final class CharOperators
     public static Slice castToBinary(@LiteralParameter("x") long x, @SqlType("char(x)") Slice slice)
     {
         return padSpaces(slice, toIntExact(x));
+    }
+
+    private static long toShortExact(long value)
+    {
+        if (value != (short) value) {
+            throw new ArithmeticException("short overflow");
+        }
+        return value;
+    }
+
+    private static long toByteExact(long value)
+    {
+        if (value != (byte) value) {
+            throw new ArithmeticException("byte overflow");
+        }
+        return value;
     }
 }
